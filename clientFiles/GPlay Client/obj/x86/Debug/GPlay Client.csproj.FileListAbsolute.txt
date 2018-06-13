@@ -5,3 +5,4 @@ C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPla
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.csproj.GenerateResource.Cache
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.exe
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.pdb
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.csprojResolveAssemblyReference.cache

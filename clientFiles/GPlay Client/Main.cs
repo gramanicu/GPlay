@@ -18,15 +18,59 @@ namespace GPlay_Client
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        public webOperations client = new webOperations();
+
+        private void Main_Load(object sender, EventArgs e)
         {
-            Uri u = new Uri(@"http://localhost/api/key=1234&type=json");
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(u);
-            HttpWebResponse res = (HttpWebResponse)req.GetResponse();
-            System.IO.Stream st = res.GetResponseStream();
-            System.IO.StreamReader sr = new System.IO.StreamReader(st);
-            string body = sr.ReadToEnd();
-            MessageBox.Show(body);
         }
+
+        public void button1_Click(object sender, EventArgs e)
+        {
+            if(textBox1.Text!="")
+                if (textBox2.Text != "")
+                {
+                    string user = textBox1.Text;
+                    string pass = textBox2.Text;
+                    client.updateLoginUrl(user, pass);
+                    client.logIn();
+                    if (client.getKey() == "Forbidden")
+                    {
+                        MessageBox.Show("login failed!");
+                    }
+                    else if (client.getKey() == "error")
+                    {
+                        MessageBox.Show("login failed!");
+                    }
+                    else MessageBox.Show("login successfull!");
+                }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            client.updateHomeUrl();
+            MessageBox.Show(client.getDataFromServer());
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (textBox1.Text != "")
+                if (textBox2.Text != "")
+                {
+                    string user = textBox1.Text;
+                    string pass = textBox2.Text;
+                    client.updateSignupUrl(user, pass);
+                    client.signUp();
+                    if (client.getKey() == "Forbidden")
+                    {
+                        MessageBox.Show("login failed!");
+                    }
+                    else if (client.getKey() == "error")
+                    {
+                        MessageBox.Show("login failed!");
+                    }
+                    else MessageBox.Show("login successfull!");
+                }
+        }
+
     }
 }

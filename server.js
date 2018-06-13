@@ -13,14 +13,15 @@ var app = express();
 
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '/views'));
+app.set('views', path.join(__dirname, 'serverFiles/views'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: false
 }));
 app.use(compression());
-app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static(path.join(__dirname, 'serverFiles/public')));
 app.use(cookieParser());
+/*
 app.use(session({
     key: 'user_sid',
     secret: 'api',
@@ -29,7 +30,7 @@ app.use(session({
     cookie: {
         expires: 600000
     }
-}));
+}));*/
 
 var key = "1234";
 
@@ -55,15 +56,39 @@ app.get('/api/key=:key&type=:type', function (req, res) {
             '    <green value="' +response.green+ '"/>' +
             '</color>');
         }
+        else if (req.params.type == "text") {
+            res.send("red="+  response.red + ";green=" + response.green + ";blue=" + response.blue);
+        }
     } else {
         res.sendStatus(403);
     }
 });
 
+app.get('/api/login/user=:user&password=:password', function (req, res) {
+    if(req.params.user==user)
+    {
+        if(req.params.password==pass)
+        {
+            res.send("1234");
+        }
+        else  res.sendStatus(403);
+    }
+    else res.sendStatus(403);
+});
+
+app.get('/api/signup/name=:name&password=:password', function (req, res) {
+    user = req.params.name;
+    pass = req.params.password;
+    res.send("1234");
+});
+
+var user = "gramanicu";
+var pass = "1234";
+
 
 console.clear();
 console.log("--------------------------------------------------------------------------------------");
-console.log(" API Server");
+console.log(" GPlay Server");
 console.log("");
 console.log(" Grama Nicolae - 2018");
 console.log("--------------------------------------------------------------------------------------");
