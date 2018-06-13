@@ -8,6 +8,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.IO;
+using System.Diagnostics;
+using System.Drawing.Text;
 
 namespace GPlay_Client
 {
@@ -22,6 +24,20 @@ namespace GPlay_Client
 
         private void Main_Load(object sender, EventArgs e)
         {
+            bool fontExists = false;
+            var fontsCollection = new InstalledFontCollection();
+            foreach (var fontFamiliy in fontsCollection.Families)
+            {
+                if (fontFamiliy.Name == "Roboto Black")
+                {
+                    fontExists = true;
+                }
+            }
+
+            if (!fontExists)
+            {
+                MessageBox.Show("Your computer is missing some fonts!");
+            }
         }
 
         public void button1_Click(object sender, EventArgs e)
@@ -53,11 +69,11 @@ namespace GPlay_Client
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (textBox1.Text != "")
-                if (textBox2.Text != "")
+            if (textBox4.Text != "")
+                if (textBox3.Text != "")
                 {
-                    string user = textBox1.Text;
-                    string pass = textBox2.Text;
+                    string user = textBox4.Text;
+                    string pass = textBox3.Text;
                     client.updateSignupUrl(user, pass);
                     client.signUp();
                     if (client.getKey() == "Forbidden")
@@ -73,4 +89,5 @@ namespace GPlay_Client
         }
 
     }
+
 }

@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPlay Client", "GPlay Client\GPlay Client.csproj", "{48F5EFAF-4667-4BE7-851C-E0C2406DC268}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{819A3EDF-F633-4853-A85F-C20BE218769D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +15,8 @@ Global
 		{48F5EFAF-4667-4BE7-851C-E0C2406DC268}.Debug|x86.Build.0 = Debug|x86
 		{48F5EFAF-4667-4BE7-851C-E0C2406DC268}.Release|x86.ActiveCfg = Release|x86
 		{48F5EFAF-4667-4BE7-851C-E0C2406DC268}.Release|x86.Build.0 = Release|x86
+		{819A3EDF-F633-4853-A85F-C20BE218769D}.Debug|x86.ActiveCfg = Debug
+		{819A3EDF-F633-4853-A85F-C20BE218769D}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
