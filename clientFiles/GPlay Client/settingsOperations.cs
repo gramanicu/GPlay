@@ -9,15 +9,58 @@ using System.Security.Cryptography;
 
 namespace GPlay_Client
 {
-    class settingsOperations
+    public class settingsOperations
     {
         public settingsOperations()
         {
         }
 
-        public void saveSettings(string[] settings)
+        public void saveSettings()
         {
             Settings.Default.Save();
+        }
+
+        public string getSavedUsername()
+        {
+            return decrypt(Settings.Default.Username);
+        }
+
+        public void setSavedUsername(string user)
+        {
+            Settings.Default.Username = user;
+            saveSettings();
+        }
+
+        public string getSavedPassword()
+        {
+            return decrypt(Settings.Default.Password);
+        }
+
+        public void setSavedPassword(string password)
+        {
+            Settings.Default.Password = password;
+            saveSettings();
+        }
+
+        public bool getAutoLogin()
+        {
+            return Settings.Default.AutoLogin;
+        }
+
+        public void setAutoLogin(bool auto)
+        {
+            Settings.Default.AutoLogin = auto;
+            saveSettings();
+        }
+
+        public string decrypt(string info)
+        {
+            return StringSecurityHelper.DecryptString(info);
+        }
+
+        public string encrypt(string info)
+        {
+            return info.EncryptString(); 
         }
 
         public string[] encryptAll(string[] info)

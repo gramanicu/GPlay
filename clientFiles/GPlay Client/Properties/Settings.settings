@@ -8,5 +8,11 @@
     <Setting Name="Password" Type="System.String" Scope="User">
       <Value Profile="(Default)">1234</Value>
     </Setting>
+    <Setting Name="AutoLogin" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Status" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Online</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

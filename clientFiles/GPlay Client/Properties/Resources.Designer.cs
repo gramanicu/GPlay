@@ -63,9 +63,9 @@ namespace GPlay_Client.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap logo64x64 {
+        internal static System.Drawing.Bitmap logo640x640 {
             get {
-                object obj = ResourceManager.GetObject("logo64x64", resourceCulture);
+                object obj = ResourceManager.GetObject("logo640x640", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

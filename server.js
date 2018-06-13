@@ -35,7 +35,8 @@ app.use(session({
 var key = "1234";
 
 app.get("/", function (req, res) {
-    res.render("home");
+   // res.render("home");
+   res.sendStatus(200);
 });
 
 app.get('/api/key=:key&type=:type', function (req, res) {
