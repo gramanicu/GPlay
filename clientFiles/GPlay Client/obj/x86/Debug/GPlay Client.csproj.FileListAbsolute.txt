@@ -1,0 +1,7 @@
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\GPlay Client.exe
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\GPlay Client.pdb
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay_Client.Main.resources
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay_Client.Properties.Resources.resources
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.csproj.GenerateResource.Cache
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.exe
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.pdb
