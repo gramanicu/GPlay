@@ -300,22 +300,52 @@ namespace GPlay_Client
         //there should be a directory in every game directory that has that versions description (a function to download the description?)
         private void downloadCache()
         {
-            string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
-            gameLibraryList = client.getDataFromServer(gameLibraryList);
-            string[] gameListArray = gameLibraryList.Split(';');
-            for (int i = 0; i < gameListArray.Length; i++)
+            bool cacheExist = true;
+            try
             {
-                gameListArray[i] = gameListArray[i].Trim();
-                string gameUrlForm = gameListArray[i].Replace(' ', '_');
-                string originUrlDesc = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=text";
-                string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=image";
-                string cache = client.clientCache + gameListArray[i] + @"\";
-                Directory.CreateDirectory(client.clientCache + gameListArray[i]);
-                client.downloadFile(originUrlDesc, cache + @"desc.json");
-                client.downloadFile(originUrlLogo, cache + @"logo.png");
+                int directoryCount = Directory.GetDirectories(@"clientCache").Length;
             }
-            //download user info
-            loadCache();
+            catch { cacheExist = false; }
+
+            if (cacheExist)
+            {
+                string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
+                gameLibraryList = client.getDataFromServer(gameLibraryList);
+                string[] gameListArray = gameLibraryList.Split(';');
+                for (int i = 0; i < gameListArray.Length; i++)
+                {
+                    gameListArray[i] = gameListArray[i].Trim();
+                    string gameUrlForm = gameListArray[i].Replace(' ', '_');
+                    string originUrlDesc = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=text";
+                    string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=image";
+                    string cache = client.clientCache + gameListArray[i] + @"\";
+                    Directory.CreateDirectory(client.clientCache + gameListArray[i]);
+                    client.downloadFile(originUrlDesc, cache + @"desc.json");
+                    client.downloadFile(originUrlLogo, cache + @"logo.png");
+                }
+                //download user info
+                loadCache();
+            }
+            else
+            {
+                string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
+                gameLibraryList = client.getDataFromServer(gameLibraryList);
+                string[] gameListArray = gameLibraryList.Split(';');
+                for (int i = 0; i < gameListArray.Length; i++)
+                {
+                    gameListArray[i] = gameListArray[i].Trim();
+                    string gameUrlForm = gameListArray[i].Replace(' ', '_');
+                    string originUrlDesc = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=text";
+                    string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=image";
+                    string cache = client.offlineCache + gameListArray[i] + @"\";
+                    Directory.CreateDirectory(client.offlineCache + gameListArray[i]);
+                    client.downloadFile(originUrlDesc, cache + @"desc.json");
+                    client.downloadFile(originUrlLogo, cache + @"logo.png");
+                }
+
+                //download user info
+                loadCache();
+            }
         }
 
         private void updateCache()
@@ -377,31 +407,70 @@ namespace GPlay_Client
 
         private void loadCache()
         {
-            int directoryCount = Directory.GetDirectories(@"clientCache").Length;
-            string[] files = Directory.GetDirectories(@"clientCache");
-
-            //check if files are not downloading
-            System.Threading.Thread.Sleep(2500);
-            for (int i = 0; i < directoryCount;i++ )
+            bool cacheExist = true;
+            try
             {
-                string text = File.ReadAllText(files[i] + @"\desc.json");
-                JToken desc = JObject.Parse(text);
-
-                string name = (string)desc.SelectToken("name");
-                string version = (string)desc.SelectToken("version");
-                string description = (string)desc.SelectToken("description");
-                string gameKey = (string)desc.SelectToken("gameKey");
-
-                string imageLocation = files[i] + @"\logo.png";
-
-                //get the user info from a file
-
-                gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
-                gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
+                int directoryCount = Directory.GetDirectories(@"clientCache").Length;
             }
-            if (client.isOnline())
+            catch { cacheExist = false; }
+
+            if (cacheExist)
             {
-                updateCache();
+                int directoryCount = Directory.GetDirectories(@"clientCache").Length;
+                string[] files = Directory.GetDirectories(@"clientCache");
+
+                //check if files are not downloading
+                System.Threading.Thread.Sleep(2500);
+                for (int i = 0; i < directoryCount; i++)
+                {
+                    string text = File.ReadAllText(files[i] + @"\desc.json");
+                    JToken desc = JObject.Parse(text);
+
+                    string name = (string)desc.SelectToken("name");
+                    string version = (string)desc.SelectToken("version");
+                    string description = (string)desc.SelectToken("description");
+                    string gameKey = (string)desc.SelectToken("gameKey");
+
+                    string imageLocation = files[i] + @"\logo.png";
+
+                    //get the user info from a file
+
+
+                    cacheExist = true;
+                    try
+                    {
+                        int directoryCountSecondary = Directory.GetDirectories(@"offlineCache").Length;
+                    }
+                    catch { cacheExist = false; }
+                    if (cacheExist)
+                    {
+                        gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
+                    }
+                    else
+                    {
+                        gameList.addGameTab(imageLocation, name, "0 hours", version, "Download");
+                    }
+
+                    gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
+                }
+                if (client.isOnline())
+                {
+                    cacheExist = true;
+                    try
+                    {
+                        int directoryCountSecondary = Directory.GetDirectories(@"offlineCache").Length;
+                    }
+                    catch { cacheExist = false; }
+                    if (cacheExist)
+                    {
+                        updateCache();
+                    }
+                }
+            }
+            else
+            {
+                //Show a message for first time config
+                load();
             }
         }
 
