@@ -22,11 +22,15 @@ namespace GPlay_Client
 
         private readonly string type = "text";
 
+        public readonly string domain = "http://192.168.1.105";
+
+        public readonly string clientCache = Directory.GetCurrentDirectory() + @"\clientCache\";
+
         public webOperations()
         {
-            home = @"http://localhost/api/";
-            login = @"http://localhost/api/login";
-            signup = @"http://localhost/api/signup";
+            home = domain + @"/api/";
+            login = domain + @"/api/login";
+            signup = domain + @"/api/signup";
         }
 
         /// <summary>
@@ -34,7 +38,7 @@ namespace GPlay_Client
         /// </summary>
         public void updateHomeUrl()
         {
-            home = @"http://localhost/api/key=" + key + "&type=" + type;
+            home = domain + @"/api/key=" + key + "&type=" + type;
         }
 
         /// <summary>
@@ -42,7 +46,7 @@ namespace GPlay_Client
         /// </summary>
         public void updateLoginUrl(string user, string password)
         {
-            login = @"http://localhost/api/login/user=" + user + "&password=" + password;
+            login = domain + @"/api/login/user=" + user + "&password=" + password;
         }
 
         /// <summary>
@@ -50,7 +54,7 @@ namespace GPlay_Client
         /// </summary>
         public void updateSignupUrl(string name, string password)
         {
-            signup = @"http://localhost/api/signup/name=" + name + "&password=" + password;
+            signup = domain + @"/api/signup/name=" + name + "&password=" + password;
         }
 
         /// <summary>
@@ -89,7 +93,7 @@ namespace GPlay_Client
         {
             try
             {
-                Uri uri = new Uri(url);
+                Uri uri = new Uri(url, true);
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(uri);
                 HttpWebResponse res = (HttpWebResponse)req.GetResponse();
                 System.IO.Stream st = res.GetResponseStream();
@@ -113,6 +117,13 @@ namespace GPlay_Client
                 }
                 else return "error";
             }
+        }
+
+        public void downloadFile(string url,string target)
+        {
+            WebClient wc = new WebClient();
+            Uri uri = new Uri(url, true);
+            wc.DownloadFileAsync(uri, target);
         }
 
         /// <summary>

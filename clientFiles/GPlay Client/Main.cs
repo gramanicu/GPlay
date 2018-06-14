@@ -10,6 +10,11 @@ using System.Net;
 using System.IO;
 using System.Diagnostics;
 using System.Drawing.Text;
+using System.Windows;
+using ICSharpCode.SharpZipLib.Zip;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace GPlay_Client
 {
@@ -134,92 +139,67 @@ namespace GPlay_Client
             menuStrip1.Visible = true;
         }
 
-        private void addGameTab(Image icon, string title, string time, string status, string buttonText)
+        private void _hideGameList()
         {
-            Point _1 = new Point(3, 5);
-            Point _2 = new Point(89, 26);
-            Point _3 = new Point(371, 33);
-            Point _4 = new Point(487, 28);
-            Point _5 = new Point(653, 28);
-            Point _6 = new Point(961, 38);
-
-            Panel p = new Panel();
-
-            p.Name = "panel" + title;
-            p.Size = new System.Drawing.Size(1183, 90);
-            p.TabIndex = 0;
-
-            PictureBox pic = new PictureBox();
-            pic.BackgroundImage = icon;
-            pic.BackgroundImageLayout = ImageLayout.Stretch;
-            pic.Name = "iconPictureBox" + title;
-            pic.Location = _1;
-            pic.Size = new System.Drawing.Size(80, 80);
-            pic.TabIndex = 0;
-            pic.TabStop = false;
-
-            Label name = new Label();
-            name.Text = title;
-            name.Name = "nameLabel" + title;
-            name.Location = _2;
-            name.AutoSize = true;
-            name.Font = new System.Drawing.Font("Roboto Black", 24F, System.Drawing.FontStyle.Bold);
-            name.Size = new System.Drawing.Size(193, 38);
-            name.TabIndex = 1;
-
-            Label currentStatus = new Label();
-            currentStatus.Text = status;
-            currentStatus.Name = "statusLabel" + title;
-            currentStatus.Location = _3;
-            currentStatus.AutoSize = true;
-            currentStatus.Font = new System.Drawing.Font("Roboto Light", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            currentStatus.Size = new System.Drawing.Size(81, 29);
-            currentStatus.TabIndex = 1;
-
-            Button action = new Button();
-            action.Text = buttonText;
-            action.Name = "actionLabel" + title;
-            action.Location = _4;
-            action.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            action.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(132)))), ((int)(((byte)(189)))), ((int)(((byte)(0)))));
-            action.Margin = new System.Windows.Forms.Padding(6, 5, 6, 5);
-            action.Size = new System.Drawing.Size(157, 42);
-            action.TabIndex = 0;
-            action.UseVisualStyleBackColor = true;
-
-            ProgressBar progress = new ProgressBar();
-            progress.Visible = false;
-            progress.Name = "downloadProgressBar" + title;
-            progress.Location = _5;
-            progress.Size = new System.Drawing.Size(229, 42);
-            progress.TabIndex = 2;
-
-            Label currentTime = new Label();
-            currentTime.Text = "Time played: "+ time;
-            currentTime.Name = "timeLabel" + title;
-            currentTime.Location = _6;
-            currentTime.AutoSize = true;
-            currentTime.Font = new System.Drawing.Font("Roboto Light", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            currentTime.Size = new System.Drawing.Size(122, 23);
-            currentTime.TabIndex = 1;
-
-            p.Controls.Add(pic);
-            p.Controls.Add(name);
-            p.Controls.Add(currentStatus);
-            p.Controls.Add(action);
-            p.Controls.Add(progress);
-            p.Controls.Add(currentTime);
-
-            flowLayoutPanel1.Controls.Add(p);
+            flowLayoutPanel1.Visible = false;
         }
+
+        private void _showGameList()
+        {
+            flowLayoutPanel1.Visible = true;
+        }
+
 
         #endregion UI
 
+        #region ZIP
+
+        /// <summary>
+        /// Helper method to determin if invoke required, if so will rerun method on correct thread.
+        /// if not do nothing.
+        /// </summary>
+        /// <param name="c">Control that might require invoking</param>
+        /// <param name="a">action to preform on control thread if so.</param>
+        /// <returns>true if invoke required</returns>
+        public static bool ControlInvokeRequired(Control c, Action a)
+        {
+            if (c.InvokeRequired) c.Invoke(new MethodInvoker(delegate { a(); }));
+            else return false;
+
+            return true;
+        }
+
+        public void unzip(string origin, string target, Action<string> callback)
+        {
+            FastZip fastZip = new FastZip();
+            string fileFilter = null;
+            fastZip.ExtractZip(origin, target, fileFilter);
+            callback(origin);
+        }
+
+        public void installationFinished(string origin)
+        {
+            gameList._resetProgressBar(gameList.findTab(currentDownload));
+            gameList._hideProgressBar(gameList.findTab(currentDownload));
+            gameList.changeButtonText("Play", gameList.findTab(currentDownload));
+            currentDownload = "";
+
+            if (File.Exists(origin))
+            {
+                File.Delete(origin);
+            }
+
+        }
+
+        #endregion ZIP
+
         public webOperations client = new webOperations();
         public settingsOperations settings = new settingsOperations();
+        public uiOperations gameList = new uiOperations();
 
         private void Main_Load(object sender, EventArgs e)
         {
+            gameList.layoutPanel = flowLayoutPanel1;
             bool fontExists = false;
             var fontsCollection = new InstalledFontCollection();
             foreach (var fontFamiliy in fontsCollection.Families)
@@ -239,6 +219,8 @@ namespace GPlay_Client
             _hideGroupBox2();
             _hideGroupBox3();
             _hideMenu();
+            _hideGameList();
+
 
             if (settings.getAutoLogin())
             {
@@ -249,6 +231,8 @@ namespace GPlay_Client
                 if (client.getKey() == "Forbidden")
                 {
                     MessageBox.Show("Login failed!");
+                    _loadGroupBox1();
+                    _showGroupBox1();
                 }
                 else if (client.getKey() == "error")
                 {
@@ -263,6 +247,52 @@ namespace GPlay_Client
             {
                 _loadGroupBox1();
                 _showGroupBox1();
+            }
+        }
+
+
+        private void downloadCache()
+        {
+            string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
+            gameLibraryList = client.getDataFromServer(gameLibraryList);
+            string[] gameListArray = gameLibraryList.Split(';');
+            for (int i = 0; i < gameListArray.Length; i++)
+            {
+                gameListArray[i] = gameListArray[i].Trim();
+                string gameUrlForm = gameListArray[i].Replace(' ', '_');
+                string originUrlDesc = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=text";
+                string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=image";
+                string cache = client.clientCache + gameListArray[i] + @"\";
+                Directory.CreateDirectory(client.clientCache + gameListArray[i]);
+                client.downloadFile(originUrlDesc, cache + @"desc.json");
+                client.downloadFile(originUrlLogo, cache + @"logo.png");
+            }
+            loadCache();
+        }
+
+        private void loadCache()
+        {
+            int directoryCount = Directory.GetDirectories(@"clientCache").Length;
+            string[] files = Directory.GetDirectories(@"clientCache");
+
+            System.Threading.Thread.Sleep(5000);
+            for (int i = 0; i < directoryCount;i++ )
+            {
+                string text = File.ReadAllText(files[i] + @"\desc.json");
+
+                JToken desc = JObject.Parse(text);
+
+                string name = (string)desc.SelectToken("name");
+                string version = (string)desc.SelectToken("version");
+                string description = (string)desc.SelectToken("description");
+                string gameKey = (string)desc.SelectToken("gameKey");
+
+                string imageLocation = files[i] + @"\logo.png";
+
+                //get the user info
+
+                gameList.addGameTab(imageLocation, name, "0 hours", version, "Download");
+                gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
             }
         }
 
@@ -289,12 +319,6 @@ namespace GPlay_Client
                         loggedIn();
                     }
                 }
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            client.updateHomeUrl();
-            MessageBox.Show(client.getDataFromServer());
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -329,10 +353,11 @@ namespace GPlay_Client
             _showGroupBox2();
         }
 
-
         private void loggedIn()
         {
+            downloadCache();
             _showMenu();
+            _showGameList();
             _clearGropBox1();
             _clearGropBox2();
             _hideGroupBox1();
@@ -341,6 +366,7 @@ namespace GPlay_Client
 
         private void loggedOut()
         {
+            _hideGameList();
             _hideMenu();
             _loadGroupBox1();
             _showGroupBox1();
@@ -369,10 +395,54 @@ namespace GPlay_Client
             _showGroupBox3();
         }
 
-        private void accountToolStripMenuItem_Click(object sender, EventArgs e)
+        public string currentDownload = "";
+        private void downloadButtonClick(object sender, EventArgs e)
         {
-            addGameTab(global::GPlay_Client.Properties.Resources.logo640x640, "Half-Life 3", "23H", "v1.5.2", "Play");
+            if (((Button)sender).Text == "Download")
+            {
+                if (currentDownload == "")
+                {
+                    currentDownload = gameList.getTitle((Panel)(((Button)sender).Parent));
+                    gameList.changeButtonText("Downloading", gameList.findTab(currentDownload));
+                    gameList._showProgressBar(gameList.findTab(currentDownload));
+                    WebClient wc = new WebClient();
+                    wc.DownloadFileCompleted += downloadFinished;
+                    wc.DownloadProgressChanged += downloadProgress;
+                    wc.DownloadFileAsync(new System.Uri(client.domain + @"/games/" + currentDownload + @".zip"), Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip");
+                }
+                else MessageBox.Show("Wait for the other operation to end!");
+            }
+            else if (((Button)sender).Text == "Update")
+            {
+                if (currentDownload == "")
+                {
+                    currentDownload = gameList.getTitle((Panel)(((Button)sender).Parent));
+                    gameList.changeButtonText("Downloading", gameList.findTab(currentDownload));
+                    WebClient wc = new WebClient();
+                    wc.DownloadFileCompleted += downloadFinished;
+                    wc.DownloadProgressChanged += downloadProgress;
+                    wc.DownloadFileAsync(new System.Uri(client.domain + @"/games/" + currentDownload + @".zip"), Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip");
+                }
+                else MessageBox.Show("Wait for the other operation to end!");
+            }
+            else if (((Button)sender).Text == "Play")
+            {
+                string gameToStart = gameList.getTitle((Panel)(((Button)sender).Parent));
+                Process.Start(Directory.GetCurrentDirectory() + @"\games\" + gameToStart + @"\" + gameToStart + @".exe");
+            }
         }
+
+        private void downloadProgress(object sender, DownloadProgressChangedEventArgs e)
+        {
+            gameList.setProgressPercentage(e.ProgressPercentage, gameList.findTab(currentDownload));
+        }
+
+        private void downloadFinished(object sender, AsyncCompletedEventArgs e)
+        {
+            gameList.changeButtonText("Installing", gameList.findTab(currentDownload));
+            new Task(() => { unzip(Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip", Directory.GetCurrentDirectory() + @"\games\" + currentDownload, installationFinished); }).Start();
+        }
+
 
 
     }

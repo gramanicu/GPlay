@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(compression());
 app.use('/static', express.static(path.join(__dirname, 'serverFiles/public')));
+app.use('/games', express.static(__dirname + '/serverFiles/games'));
 app.use(cookieParser());
 /*
 app.use(session({
@@ -39,30 +40,42 @@ app.get("/", function (req, res) {
    res.sendStatus(200);
 });
 
-app.get('/api/key=:key&type=:type', function (req, res) {
-    var response = {
-        blue: Math.floor(Math.random() * 256),
-        red: Math.floor(Math.random() * 256),
-        green: Math.floor(Math.random() * 256)
-    };
-    console.log(response);
+app.get('/api/games/general%key=:key&type=:type',function (req,res)
+{
     if (req.params.key == key) {
-        if (req.params.type == "json") {
-            res.send(response).status(200);
-        } else if (req.params.type == "xml") {
-            res.send('<?xml version="1.0" encoding="utf-8"?>' +
-            '<color>' +
-            '    <blue value="' +response.blue +'"/>' +
-            '    <red value="' + response.red +'"/>' +
-            '    <green value="' +response.green+ '"/>' +
-            '</color>');
-        }
-        else if (req.params.type == "text") {
-            res.send("red="+  response.red + ";green=" + response.green + ";blue=" + response.blue);
-        }
-    } else {
-        res.sendStatus(403);
+        //it doesnt matter the type, the response will be text
+            res.sendFile(__dirname + '/serverFiles/library/gameList.txt');
     }
+});
+
+app.get('/api/games/about=:about%key=:key&type=:type',function (req,res)
+{
+    var games = [];
+    fs.readdirSync(__dirname + '/serverFiles/games').forEach(file => {
+        games.push(file);
+      });
+    var game = "";
+    
+    if (req.params.key == key) {
+    for(var i=0;i<games.length;i++)
+    {
+        game = games[i].replace(".zip", '');
+        game = game.replace(/ /g, "_");
+        console.log(game);
+        if(req.params.about == game)
+        {
+            game = games[i].replace(".zip", '');
+            if(req.params.type=="text")
+            {
+                res.sendFile(__dirname + '/serverFiles/library/' + game + "/info.json");
+            }
+            else if (req.params.type=="image")
+            {
+                res.sendFile(__dirname + '/serverFiles/library/' + game + "/logo.png");
+            }
+        }
+    }
+}
 });
 
 app.get('/api/login/user=:user&password=:password', function (req, res) {
@@ -105,4 +118,23 @@ var server = app.listen(port, function () {
     } else console.log('Server is now running. Go to localhost on your browser');
     console.timeEnd('Server started in ');
     console.log("");
+
+    var games = [];
+    fs.readdirSync(__dirname + '/serverFiles/games').forEach(file => {
+        games.push(file);
+      });
+    var response = "";
+    for(var i=0;i<games.length;i++)
+    {
+        response += games[i].replace(".zip", '');
+        if(i<games.length-1)
+        {
+            response += " ; ";
+        }
+    }
+    fs.writeFile("serverFiles/library/gameList.txt", response , function (err) {
+        if (err) throw err;
+        console.log('Updated the games list');
+      });
+
 });
