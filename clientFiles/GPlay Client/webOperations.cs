@@ -24,13 +24,26 @@ namespace GPlay_Client
 
         public readonly string domain = "http://192.168.1.105";
 
-        public readonly string clientCache = Directory.GetCurrentDirectory() + @"\clientCache\";
+        public readonly string clientCache = Directory.GetCurrentDirectory() + @"\onlineCache\";
+        public readonly string offlineCache = Directory.GetCurrentDirectory() + @"\clientCache\";
+        public readonly string gameDirectory = Directory.GetCurrentDirectory() + @"\games";
+        public readonly string gameDirectoryName = "games";
 
         public webOperations()
         {
             home = domain + @"/api/";
             login = domain + @"/api/login";
             signup = domain + @"/api/signup";
+        }
+
+        /// <summary>
+        /// Checks if the server is online
+        /// </summary>
+        public bool isOnline()
+        {
+            string status = getDataFromServer(domain);
+            if (status == "OK") return true;
+            else return false;
         }
 
         /// <summary>

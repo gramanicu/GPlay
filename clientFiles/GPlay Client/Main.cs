@@ -15,6 +15,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using Microsoft.VisualBasic.FileIO;
 
 namespace GPlay_Client
 {
@@ -60,12 +61,13 @@ namespace GPlay_Client
         Point _originalPointGroupBox1 = new Point(457, 148);
         Point _originalPointGroupBox2 = new Point(457, 148);
         Point _originalPointGroupBox3 = new Point(406, 151);
+        Point _originalPointGroupBox4 = new Point(236, 148);
 
         #endregion OriginalProprietes
 
         #region UI
 
-        Point offscreen = new Point(2000, 2000);
+        Point offscreen = new Point(5000, 5000);
 
         private void _loadGroupBox1()
         {
@@ -97,6 +99,13 @@ namespace GPlay_Client
             groupBox3.Location = _originalPointGroupBox3;
         }
 
+        private void _showGroupBox4()
+        {
+            groupBox4.Visible = true;
+            groupBox4.Location = _originalPointGroupBox4;
+        }
+
+
         private void _hideGroupBox1()
         {
             groupBox1.Visible = false;
@@ -115,6 +124,12 @@ namespace GPlay_Client
             groupBox3.Location = offscreen;
         }
 
+        private void _hideGroupBox4()
+        {
+            groupBox4.Visible = false;
+            groupBox4.Location = offscreen;
+        }
+
         private void _clearGropBox1()
         {
             textBox1.Text = "";
@@ -127,6 +142,11 @@ namespace GPlay_Client
             textBox3.Text = "";
             textBox4.Text = "";
             checkBox1.Checked = false;
+        }
+
+        private void _clearGameList()
+        {
+            flowLayoutPanel1.Controls.Clear();
         }
 
         private void _hideMenu()
@@ -212,45 +232,72 @@ namespace GPlay_Client
 
             if (!fontExists)
             {
-                MessageBox.Show("Your computer is missing some fonts!");
+                MessageBox.Show("Your computer is missing some fonts! (Roboto)");
             }
 
+            load();
+
+        }
+
+        private void load()
+        {
+            _clearGameList();
             _hideGroupBox1();
             _hideGroupBox2();
             _hideGroupBox3();
+            _hideGroupBox4();
             _hideMenu();
             _hideGameList();
 
-
-            if (settings.getAutoLogin())
+            if (client.isOnline())
             {
-                string user = settings.getSavedUsername();
-                string password = settings.getSavedPassword();
-                client.updateLoginUrl(user, password);
-                client.logIn();
-                if (client.getKey() == "Forbidden")
+                onlineToolStripMenuItem.Text = "Online";
+                if (settings.getAutoLogin())
                 {
-                    MessageBox.Show("Login failed!");
-                    _loadGroupBox1();
-                    _showGroupBox1();
-                }
-                else if (client.getKey() == "error")
-                {
-                    MessageBox.Show("Login failed!");
+                    string user = settings.getSavedUsername();
+                    string password = settings.getSavedPassword();
+                    client.updateLoginUrl(user, password);
+                    client.logIn();
+                    if (client.getKey() == "Forbidden")
+                    {
+                        MessageBox.Show("Login failed!");
+                        _loadGroupBox1();
+                        _showGroupBox1();
+                    }
+                    else if (client.getKey() == "error")
+                    {
+                        MessageBox.Show("Login failed!");
+                    }
+                    else
+                    {
+                        loggedIn();
+                    }
                 }
                 else
                 {
-                    loggedIn();
+                    _loadGroupBox1();
+                    _showGroupBox1();
                 }
             }
             else
             {
-                _loadGroupBox1();
-                _showGroupBox1();
+                onlineToolStripMenuItem.Text = "Offline";
+                appIsOffline();
             }
         }
 
+        private void appIsOffline()
+        {
+            _hideGroupBox1();
+            _hideGroupBox2();
+            _hideGroupBox3();
+            _hideGroupBox4();
+            _hideMenu();
+            _hideGameList();
+            _showGroupBox4();
+        }
 
+        //there should be a directory in every game directory that has that versions description (a function to download the description?)
         private void downloadCache()
         {
             string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
@@ -267,7 +314,65 @@ namespace GPlay_Client
                 client.downloadFile(originUrlDesc, cache + @"desc.json");
                 client.downloadFile(originUrlLogo, cache + @"logo.png");
             }
+            //download user info
             loadCache();
+        }
+
+        private void updateCache()
+        {
+            string gameDirectory = client.gameDirectory;
+            string[] files = Directory.GetDirectories(@"clientCache");
+            string[] cacheFiles = Directory.GetDirectories(@"onlineCache");
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                string name = files[i].Replace(@"clientCache\", "");
+                for (int j = 0; j < cacheFiles.Length; j++)
+                {
+                    string newName = cacheFiles[j].Replace(@"onlineCache\", "");
+                    if (newName == name)
+                    {
+
+                        string oldText = File.ReadAllText(files[i] + @"\desc.json");
+                        string newText = File.ReadAllText(cacheFiles[j] + @"\desc.json");
+                        JToken oldDesc = JObject.Parse(oldText);
+                        JToken newDesc = JObject.Parse(newText);
+
+                        string oldV = (string)oldDesc.SelectToken("version");
+                        string newV = (string)newDesc.SelectToken("version");
+
+                        if (oldV != newV)
+                        {
+                            gameList.changeButtonText("Update", gameList.findTab(name));
+                        }
+                    }
+                }
+            }
+        }
+
+        private void replaceSpecificCache(string cacheName)
+        {
+            string gameDirectory = client.gameDirectory;
+            string[] files = Directory.GetDirectories(@"clientCache");
+            string[] cacheFiles = Directory.GetDirectories(@"onlineCache");
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                string name = files[i].Replace(@"clientCache\", "");
+                if (cacheName == name)
+                {
+                    for (int j = 0; j < cacheFiles.Length; j++)
+                    {
+                        string newName = cacheFiles[j].Replace(@"onlineCache\", "");
+                        if (newName == cacheName)
+                        {
+                            FileSystem.CopyDirectory(cacheFiles[j], files[i], true);
+                            _clearGameList();
+                            loadCache();
+                        }
+                    }
+                }
+            }
         }
 
         private void loadCache()
@@ -275,11 +380,11 @@ namespace GPlay_Client
             int directoryCount = Directory.GetDirectories(@"clientCache").Length;
             string[] files = Directory.GetDirectories(@"clientCache");
 
-            System.Threading.Thread.Sleep(5000);
+            //check if files are not downloading
+            System.Threading.Thread.Sleep(2500);
             for (int i = 0; i < directoryCount;i++ )
             {
                 string text = File.ReadAllText(files[i] + @"\desc.json");
-
                 JToken desc = JObject.Parse(text);
 
                 string name = (string)desc.SelectToken("name");
@@ -289,10 +394,14 @@ namespace GPlay_Client
 
                 string imageLocation = files[i] + @"\logo.png";
 
-                //get the user info
+                //get the user info from a file
 
-                gameList.addGameTab(imageLocation, name, "0 hours", version, "Download");
+                gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
                 gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
+            }
+            if (client.isOnline())
+            {
+                updateCache();
             }
         }
 
@@ -301,22 +410,35 @@ namespace GPlay_Client
             if(textBox1.Text!="")
                 if (textBox2.Text != "")
                 {
-                    string user = textBox1.Text;
-                    string pass = textBox2.Text;
-                    client.updateLoginUrl(user, pass);
-                    client.logIn();
-                    if (client.getKey() == "Forbidden")
+                    if (client.isOnline())
                     {
-                        MessageBox.Show("Login failed!");
-                    }
-                    else if (client.getKey() == "error")
-                    {
-                        MessageBox.Show("Login failed!");
+                        string user = textBox1.Text;
+                        string pass = textBox2.Text;
+                        client.updateLoginUrl(user, pass);
+                        client.logIn();
+                        if (client.getKey() == "Forbidden")
+                        {
+                            MessageBox.Show("Login failed!");
+                        }
+                        else if (client.getKey() == "error")
+                        {
+                            MessageBox.Show("Login failed!");
+                        }
+                        else
+                        {
+                            settings.setAutoLogin(checkBox1.Checked);
+                            loggedIn();
+                        }
                     }
                     else
                     {
-                        settings.setAutoLogin(checkBox1.Checked);
-                        loggedIn();
+                        string user = textBox1.Text;
+                        string pass = textBox2.Text;
+                        if (pass == settings.getSavedPassword() && user == settings.getSavedUsername())
+                        {
+                            offlineLoggedIn();
+                        }
+
                     }
                 }
         }
@@ -364,8 +486,29 @@ namespace GPlay_Client
             _hideGroupBox2();
         }
 
+        private void offlineLog()
+        {
+            _hideMenu();
+            _hideGameList();
+            _hideGroupBox2();
+            _hideGroupBox3();
+            _hideGroupBox4();
+            _showGroupBox1();
+            _clearGropBox1();
+        }
+
+        private void offlineLoggedIn()
+        {
+            _hideGroupBox1();
+            _hideGroupBox4();
+            _showMenu();
+            _showGameList();
+            loadCache();
+        }
+
         private void loggedOut()
         {
+            _clearGameList();
             _hideGameList();
             _hideMenu();
             _loadGroupBox1();
@@ -380,7 +523,6 @@ namespace GPlay_Client
         private void button4_Click(object sender, EventArgs e)
         {
             settings.setAutoLogin(checkBox3.Checked);
-
             _hideGroupBox3();
         }
 
@@ -391,6 +533,7 @@ namespace GPlay_Client
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            _hideGameList();
             _loadGroupBox3();
             _showGroupBox3();
         }
@@ -419,7 +562,7 @@ namespace GPlay_Client
                     currentDownload = gameList.getTitle((Panel)(((Button)sender).Parent));
                     gameList.changeButtonText("Downloading", gameList.findTab(currentDownload));
                     WebClient wc = new WebClient();
-                    wc.DownloadFileCompleted += downloadFinished;
+                    wc.DownloadFileCompleted += updateFinished;
                     wc.DownloadProgressChanged += downloadProgress;
                     wc.DownloadFileAsync(new System.Uri(client.domain + @"/games/" + currentDownload + @".zip"), Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip");
                 }
@@ -441,6 +584,31 @@ namespace GPlay_Client
         {
             gameList.changeButtonText("Installing", gameList.findTab(currentDownload));
             new Task(() => { unzip(Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip", Directory.GetCurrentDirectory() + @"\games\" + currentDownload, installationFinished); }).Start();
+        }
+
+        private void updateFinished(object sender, AsyncCompletedEventArgs e)
+        {
+            replaceSpecificCache(currentDownload);
+            gameList.changeButtonText("Installing", gameList.findTab(currentDownload));
+            new Task(() => { unzip(Directory.GetCurrentDirectory() + @"\" + currentDownload + @".zip", Directory.GetCurrentDirectory() + @"\games\" + currentDownload, installationFinished); }).Start();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            load();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            offlineLog();
+        }
+
+        private void onlineToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (onlineToolStripMenuItem.Text=="Offline")
+            {
+                load();
+            }
         }
 
 
