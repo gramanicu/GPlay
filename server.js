@@ -61,7 +61,6 @@ app.get('/api/games/about=:about%key=:key&type=:type',function (req,res)
     {
         game = games[i].replace(".zip", '');
         game = game.replace(/ /g, "_");
-        console.log(game);
         if(req.params.about == game)
         {
             game = games[i].replace(".zip", '');
