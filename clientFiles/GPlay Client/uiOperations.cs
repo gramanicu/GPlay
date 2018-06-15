@@ -20,15 +20,16 @@ namespace GPlay_Client
         public uiOperations()
         {
         }
-            
+
+        Point _1 = new Point(3, 5);
+        Point _2 = new Point(89, 26);
+        Point _3 = new Point(250, 35);
+        Point _4 = new Point(487, 28);
+        Point _5 = new Point(653, 28);
+        Point _6 = new Point(961, 38);
+
         public void addGameTab(Image icon, string title, string time, string status, string buttonText)
         {
-            Point _1 = new Point(3, 5);
-            Point _2 = new Point(89, 26);
-            Point _3 = new Point(331, 35);
-            Point _4 = new Point(487, 28);
-            Point _5 = new Point(653, 28);
-            Point _6 = new Point(961, 38);
 
             Panel p = new Panel();
 
@@ -58,9 +59,10 @@ namespace GPlay_Client
             currentStatus.Text = status;
             currentStatus.Name = "statusLabel" + title;
             currentStatus.Location = _3;
-            currentStatus.AutoSize = true;
+            currentStatus.AutoSize = false;
             currentStatus.Font = new System.Drawing.Font("Roboto Light", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            currentStatus.Size = new System.Drawing.Size(81, 29);
+            currentStatus.Size = new System.Drawing.Size(150, 29);
+            currentStatus.TextAlign = ContentAlignment.MiddleCenter;
             currentStatus.TabIndex = 1;
 
             Button action = new Button();
@@ -103,12 +105,6 @@ namespace GPlay_Client
 
         public void addGameTab(string icon, string title, string time, string status, string buttonText)
         {
-            Point _1 = new Point(3, 5);
-            Point _2 = new Point(89, 26);
-            Point _3 = new Point(331, 35);
-            Point _4 = new Point(487, 28);
-            Point _5 = new Point(653, 28);
-            Point _6 = new Point(961, 38);
 
             Panel p = new Panel();
 
@@ -138,9 +134,10 @@ namespace GPlay_Client
             currentStatus.Text = status;
             currentStatus.Name = "statusLabel" + title;
             currentStatus.Location = _3;
-            currentStatus.AutoSize = true;
+            currentStatus.AutoSize = false;
             currentStatus.Font = new System.Drawing.Font("Roboto Light", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            currentStatus.Size = new System.Drawing.Size(81, 29);
+            currentStatus.Size = new System.Drawing.Size(230, 29);
+            currentStatus.TextAlign = ContentAlignment.MiddleCenter;
             currentStatus.TabIndex = 1;
 
             Button action = new Button();
@@ -177,6 +174,7 @@ namespace GPlay_Client
             p.Controls.Add(progress);
             p.Controls.Add(currentTime);
 
+            if (Main.ControlInvokeRequired(layoutPanel, () => addGameTab(icon, title, time, status, buttonText))) return;
             layoutPanel.Controls.Add(p);
         }
 
@@ -367,6 +365,22 @@ namespace GPlay_Client
                 }
             }
             catch { }
+        }
+
+        public string getStatus(Panel p)
+        {
+            try
+            {
+                foreach (Label l in p.Controls.OfType<Label>())
+                {
+                    if (l.Name.StartsWith("statusLabel"))
+                    {
+                        return l.Text;
+                    }
+                }
+            }
+            catch { }
+            return null;
         }
     }
 }

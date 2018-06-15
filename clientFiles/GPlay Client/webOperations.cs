@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Net;
 using System.IO;
+using System.Diagnostics;
 
 namespace GPlay_Client
 {
@@ -132,11 +133,35 @@ namespace GPlay_Client
             }
         }
 
+        public List<string> filesToDownload = new List<string>();
+        public List<long> downloadTimes = new List<long>();
         public void downloadFile(string url,string target)
         {
             WebClient wc = new WebClient();
             Uri uri = new Uri(url, true);
+            filesToDownload.Add(target);
+            downloadTimes.Add(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
             wc.DownloadFileAsync(uri, target);
+            wc.DownloadFileCompleted += downloadFileCompleted(target);
+        }
+
+        public AsyncCompletedEventHandler downloadFileCompleted(string filename)
+        {
+            Action<object, AsyncCompletedEventArgs> action = (sender, e) =>
+            {
+                int index = filesToDownload.IndexOf(filename);
+                filesToDownload.Remove(filename);
+                long startTime = downloadTimes.ToArray()[index];
+                downloadTimes.RemoveAt(index);
+                Debug.WriteLine(filename + " was downloaded in " + ((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond)-startTime).ToString() + " miliseconds");
+            };
+            return new AsyncCompletedEventHandler(action);
+        }
+
+        public bool filesAreDownloading()
+        {
+            if (filesToDownload.ToArray().Length != 0) return false;
+            else return true;
         }
 
         /// <summary>

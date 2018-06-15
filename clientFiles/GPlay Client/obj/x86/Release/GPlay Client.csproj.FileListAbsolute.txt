@@ -1,0 +1,14 @@
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\GPlay Client.exe.config
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\ICSharpCode.SharpZipLib.dll
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\Newtonsoft.Json.dll
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\Newtonsoft.Json.pdb
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\Newtonsoft.Json.xml
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\app.config
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\GPlay Client.exe
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Release\GPlay Client.pdb
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay Client.csprojResolveAssemblyReference.cache
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay_Client.Main.resources
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay_Client.Properties.Resources.resources
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay Client.csproj.GenerateResource.Cache
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay Client.exe
+C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Release\GPlay Client.pdb

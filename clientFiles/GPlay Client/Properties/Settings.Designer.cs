@@ -61,13 +61,13 @@ namespace GPlay_Client.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Online")]
-        public string Status {
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool FirstTime {
             get {
-                return ((string)(this["Status"]));
+                return ((bool)(this["FirstTime"]));
             }
             set {
-                this["Status"] = value;
+                this["FirstTime"] = value;
             }
         }
     }

@@ -27,7 +27,7 @@ namespace GPlay_Client
 
         public void setSavedUsername(string user)
         {
-            Settings.Default.Username = user;
+            Settings.Default.Username = encrypt(user);
             saveSettings();
         }
 
@@ -38,7 +38,18 @@ namespace GPlay_Client
 
         public void setSavedPassword(string password)
         {
-            Settings.Default.Password = password;
+            Settings.Default.Password = encrypt(password);
+            saveSettings();
+        }
+
+        public bool isFirstTime()
+        {
+            return Settings.Default.FirstTime;
+        }
+
+        public void setFirstTime(bool firstTime)
+        {
+            Settings.Default.FirstTime = firstTime;
             saveSettings();
         }
 

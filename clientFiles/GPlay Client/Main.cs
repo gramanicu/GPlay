@@ -146,6 +146,7 @@ namespace GPlay_Client
 
         private void _clearGameList()
         {
+            if (ControlInvokeRequired(flowLayoutPanel1, () => _clearGameList())) return;
             flowLayoutPanel1.Controls.Clear();
         }
 
@@ -239,20 +240,27 @@ namespace GPlay_Client
 
         }
 
-        private void load()
+        private void _clearAll()
         {
             _clearGameList();
+            _clearGropBox1();
+            _clearGropBox2();
             _hideGroupBox1();
             _hideGroupBox2();
             _hideGroupBox3();
             _hideGroupBox4();
             _hideMenu();
             _hideGameList();
+        }
+
+        private void load()
+        {
+            _clearAll();
 
             if (client.isOnline())
             {
                 onlineToolStripMenuItem.Text = "Online";
-                if (settings.getAutoLogin())
+                if (settings.getAutoLogin() && settings.getSavedPassword() != null && settings.getSavedUsername() != null)
                 {
                     string user = settings.getSavedUsername();
                     string password = settings.getSavedPassword();
@@ -267,6 +275,8 @@ namespace GPlay_Client
                     else if (client.getKey() == "error")
                     {
                         MessageBox.Show("Login failed!");
+                        _loadGroupBox1();
+                        _showGroupBox1();
                     }
                     else
                     {
@@ -288,26 +298,15 @@ namespace GPlay_Client
 
         private void appIsOffline()
         {
-            _hideGroupBox1();
-            _hideGroupBox2();
-            _hideGroupBox3();
-            _hideGroupBox4();
-            _hideMenu();
-            _hideGameList();
+            _clearAll();
             _showGroupBox4();
         }
 
         //there should be a directory in every game directory that has that versions description (a function to download the description?)
         private void downloadCache()
         {
-            bool cacheExist = true;
-            try
-            {
-                int directoryCount = Directory.GetDirectories(@"clientCache").Length;
-            }
-            catch { cacheExist = false; }
-
-            if (cacheExist)
+            bool offlineCacheExist = Directory.Exists(client.offlineCache);
+            if (offlineCacheExist)
             {
                 string gameLibraryList = client.domain + @"/api/games/general%key=" + client.getKey() + @"&type=text";
                 gameLibraryList = client.getDataFromServer(gameLibraryList);
@@ -323,6 +322,8 @@ namespace GPlay_Client
                     client.downloadFile(originUrlDesc, cache + @"desc.json");
                     client.downloadFile(originUrlLogo, cache + @"logo.png");
                 }
+
+
                 //download user info
                 loadCache();
             }
@@ -350,32 +351,85 @@ namespace GPlay_Client
 
         private void updateCache()
         {
-            string gameDirectory = client.gameDirectory;
-            string[] files = Directory.GetDirectories(@"clientCache");
-            string[] cacheFiles = Directory.GetDirectories(@"onlineCache");
-
-            for (int i = 0; i < files.Length; i++)
+            if (client.filesAreDownloading() != false)
             {
-                string name = files[i].Replace(@"clientCache\", "");
-                for (int j = 0; j < cacheFiles.Length; j++)
+                string gameDirectory = client.gameDirectory;
+                string[] files = Directory.GetDirectories(@"clientCache");
+                string[] cacheFiles = Directory.GetDirectories(@"onlineCache");
+
+                for (int i = 0; i < files.Length; i++)
                 {
-                    string newName = cacheFiles[j].Replace(@"onlineCache\", "");
-                    if (newName == name)
+                    string name = files[i].Replace(@"clientCache\", "");
+                    for (int j = 0; j < cacheFiles.Length; j++)
                     {
-
-                        string oldText = File.ReadAllText(files[i] + @"\desc.json");
-                        string newText = File.ReadAllText(cacheFiles[j] + @"\desc.json");
-                        JToken oldDesc = JObject.Parse(oldText);
-                        JToken newDesc = JObject.Parse(newText);
-
-                        string oldV = (string)oldDesc.SelectToken("version");
-                        string newV = (string)newDesc.SelectToken("version");
-
-                        if (oldV != newV)
+                        string newName = cacheFiles[j].Replace(@"onlineCache\", "");
+                        if (newName == name)
                         {
-                            gameList.changeButtonText("Update", gameList.findTab(name));
+
+                            string oldText = File.ReadAllText(files[i] + @"\desc.json");
+                            string newText = File.ReadAllText(cacheFiles[j] + @"\desc.json");
+                            JToken oldDesc = JObject.Parse(oldText);
+                            JToken newDesc = JObject.Parse(newText);
+
+                            string oldV = (string)oldDesc.SelectToken("version");
+                            string newV = (string)newDesc.SelectToken("version");
+
+                            if (oldV != newV)
+                            {
+                                gameList.changeButtonText("Update", gameList.findTab(name));
+                                if (oldV.Length + newV.Length > 12) gameList.changeStatus("new " + newV, gameList.findTab(name));
+                                else if (oldV.Length > 5 || newV.Length > 5) gameList.changeStatus(oldV + "->" + newV, gameList.findTab(name));
+                                else gameList.changeStatus(oldV + " -> " + newV, gameList.findTab(name));
+                            }
                         }
                     }
+                }
+
+                string[] oldFileNames = new string[files.Length];
+                string[] newFileNames = new string[cacheFiles.Length];
+                for (int i = 0; i < files.Length; i++)
+                {
+                    oldFileNames[i] = files[i].Replace(@"clientCache\", "");
+                }
+
+                for (int i = 0; i < cacheFiles.Length; i++)
+                {
+                    newFileNames[i] = cacheFiles[i].Replace(@"onlineCache\", "");
+                }
+
+                var newFiles = newFileNames.Except(oldFileNames);
+
+                foreach (var file in newFiles)
+                {
+                    addNewCacheToOffline(file);
+                }
+            }
+            else
+            {
+                //this waits for 50 ms until it tries again (if there are files still downloading)
+                System.Threading.Timer timer = null;
+                timer = new System.Threading.Timer((obj) =>
+                {
+                    updateCache();
+                    timer.Dispose();
+                },
+                            null, 50, System.Threading.Timeout.Infinite);
+            }
+        }
+
+        private void addNewCacheToOffline(string cacheName)
+        {
+            string gameDirectory = client.gameDirectory;
+            string[] cacheFiles = Directory.GetDirectories(@"onlineCache");
+            for (int i = 0; i < cacheFiles.Length; i++)
+            {
+                string name = cacheFiles[i].Replace(@"onlineCache\", "");
+                if (cacheName == name)
+                {
+                    string destination = client.offlineCache + @"/" + name;
+                    FileSystem.CopyDirectory(cacheFiles[i], destination, true);
+                    _clearGameList();
+                    loadCache();
                 }
             }
         }
@@ -407,20 +461,12 @@ namespace GPlay_Client
 
         private void loadCache()
         {
-            bool cacheExist = true;
-            try
-            {
-                int directoryCount = Directory.GetDirectories(@"clientCache").Length;
-            }
-            catch { cacheExist = false; }
-
-            if (cacheExist)
+            bool offlineCacheExist = Directory.Exists(client.offlineCache);
+            if (offlineCacheExist)
             {
                 int directoryCount = Directory.GetDirectories(@"clientCache").Length;
                 string[] files = Directory.GetDirectories(@"clientCache");
 
-                //check if files are not downloading
-                System.Threading.Thread.Sleep(2500);
                 for (int i = 0; i < directoryCount; i++)
                 {
                     string text = File.ReadAllText(files[i] + @"\desc.json");
@@ -436,13 +482,8 @@ namespace GPlay_Client
                     //get the user info from a file
 
 
-                    cacheExist = true;
-                    try
-                    {
-                        int directoryCountSecondary = Directory.GetDirectories(@"offlineCache").Length;
-                    }
-                    catch { cacheExist = false; }
-                    if (cacheExist)
+                    bool gameIsDownloaded = Directory.Exists(client.gameDirectory + @"\" + name);
+                    if(gameIsDownloaded)
                     {
                         gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
                     }
@@ -455,13 +496,8 @@ namespace GPlay_Client
                 }
                 if (client.isOnline())
                 {
-                    cacheExist = true;
-                    try
-                    {
-                        int directoryCountSecondary = Directory.GetDirectories(@"offlineCache").Length;
-                    }
-                    catch { cacheExist = false; }
-                    if (cacheExist)
+                    bool onlineCacheExist = Directory.Exists(client.clientCache);
+                    if (onlineCacheExist)
                     {
                         updateCache();
                     }
@@ -496,6 +532,11 @@ namespace GPlay_Client
                         else
                         {
                             settings.setAutoLogin(checkBox1.Checked);
+                            if (checkBox1.Checked)
+                            {
+                                settings.setSavedUsername(user);
+                                settings.setSavedPassword(pass);
+                            }
                             loggedIn();
                         }
                     }
@@ -532,6 +573,11 @@ namespace GPlay_Client
                     else
                     {
                         settings.setAutoLogin(checkBox2.Checked);
+                        if (checkBox2.Checked)
+                        {
+                            settings.setSavedUsername(user);
+                            settings.setSavedPassword(pass);
+                        }
                         loggedIn();
                     }
                 }
@@ -586,6 +632,7 @@ namespace GPlay_Client
 
         private void logOutToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            settings.setAutoLogin(false);
             loggedOut();
         }
 
@@ -593,11 +640,13 @@ namespace GPlay_Client
         {
             settings.setAutoLogin(checkBox3.Checked);
             _hideGroupBox3();
+            _showGameList();
         }
 
         private void button5_Click(object sender, EventArgs e)
         {
             _hideGroupBox3();
+            _showGameList();
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
