@@ -36,57 +36,46 @@ app.use(session({
 var key = "1234";
 
 app.get("/", function (req, res) {
-   // res.render("home");
-   res.sendStatus(200);
+    // res.render("home");
+    res.sendStatus(200);
 });
 
-app.get('/api/games/general%key=:key&type=:type',function (req,res)
-{
+app.get('/api/games/general%key=:key&type=:type', function (req, res) {
     if (req.params.key == key) {
         //it doesnt matter the type, the response will be text
-            res.sendFile(__dirname + '/serverFiles/library/gameList.txt');
+        res.sendFile(__dirname + '/serverFiles/library/gameList.txt');
     }
 });
 
-app.get('/api/games/about=:about%key=:key&type=:type',function (req,res)
-{
+app.get('/api/games/about=:about%key=:key&type=:type', function (req, res) {
     var games = [];
     fs.readdirSync(__dirname + '/serverFiles/games').forEach(file => {
         games.push(file);
-      });
+    });
     var game = "";
-    
+
     if (req.params.key == key) {
-    for(var i=0;i<games.length;i++)
-    {
-        game = games[i].replace(".zip", '');
-        game = game.replace(/ /g, "_");
-        if(req.params.about == game)
-        {
+        for (var i = 0; i < games.length; i++) {
             game = games[i].replace(".zip", '');
-            if(req.params.type=="text")
-            {
-                res.sendFile(__dirname + '/serverFiles/library/' + game + "/info.json");
-            }
-            else if (req.params.type=="image")
-            {
-                res.sendFile(__dirname + '/serverFiles/library/' + game + "/logo.png");
+            game = game.replace(/ /g, "_");
+            if (req.params.about == game) {
+                game = games[i].replace(".zip", '');
+                if (req.params.type == "text") {
+                    res.sendFile(__dirname + '/serverFiles/library/' + game + "/info.json");
+                } else if (req.params.type == "image") {
+                    res.sendFile(__dirname + '/serverFiles/library/' + game + "/logo.png");
+                }
             }
         }
     }
-}
 });
 
 app.get('/api/login/user=:user&password=:password', function (req, res) {
-    if(req.params.user==user)
-    {
-        if(req.params.password==pass)
-        {
+    if (req.params.user == user) {
+        if (req.params.password == pass) {
             res.send("1234");
-        }
-        else  res.sendStatus(403);
-    }
-    else res.sendStatus(403);
+        } else res.sendStatus(403);
+    } else res.sendStatus(403);
 });
 
 app.get('/api/signup/name=:name&password=:password', function (req, res) {
@@ -121,19 +110,44 @@ var server = app.listen(port, function () {
     var games = [];
     fs.readdirSync(__dirname + '/serverFiles/games').forEach(file => {
         games.push(file);
-      });
+    });
     var response = "";
-    for(var i=0;i<games.length;i++)
-    {
+    for (var i = 0; i < games.length; i++) {
         response += games[i].replace(".zip", '');
-        if(i<games.length-1)
-        {
+        if (i < games.length - 1) {
             response += " ; ";
         }
     }
-    fs.writeFile("serverFiles/library/gameList.txt", response , function (err) {
+    fs.writeFile("serverFiles/library/gameList.txt", response, function (err) {
         if (err) throw err;
         console.log('Updated the games list');
-      });
+    });
+
+    var MongoClient = require('mongodb').MongoClient;
+
+    var password = "";
+    var uri = "mongodb+srv://gramanicu:" + password + "@maincluster-ujn0l.mongodb.net/test?retryWrites=true";
+    MongoClient.connect(uri, function (err, client) {
+        if (err) {
+            console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
+        }
+
+        console.log('Connected to the database');
+
+
+        var collection = client.db("GPlay").collection("games");
+
+        var gameList = [];
+        for (var i = 0; i < games.length; i++) {
+            response = games[i].replace(".zip", '');
+            var obj = JSON.parse(fs.readFileSync(__dirname + '/serverFiles/library/' + response + '/info.json', 'utf8'));
+            gameList.push(obj);
+        }
+
+        collection.insertMany(gameList, function (err, res) {
+            console.log("Number of documents inserted: " + res.insertedCount);
+        });
+        client.close();
+    });
 
 });
