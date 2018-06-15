@@ -12,8 +12,3 @@ C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPla
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\Newtonsoft.Json.dll
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\Newtonsoft.Json.pdb
 C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\Newtonsoft.Json.xml
-C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\GPlay Client.exe.manifest
-C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\bin\Debug\GPlay Client.application
-C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.TrustInfo.xml
-C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.exe.manifest
-C:\Users\Grama Nicolae\Desktop\GPlay\clientFiles\GPlay Client\obj\x86\Debug\GPlay Client.application

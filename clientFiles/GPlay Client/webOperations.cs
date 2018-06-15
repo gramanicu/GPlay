@@ -23,7 +23,7 @@ namespace GPlay_Client
 
         private readonly string type = "text";
 
-        public readonly string domain = "http://192.168.1.105";
+        public readonly string domain = "http://localhost";
 
         public readonly string clientCache = Directory.GetCurrentDirectory() + @"\onlineCache\";
         public readonly string offlineCache = Directory.GetCurrentDirectory() + @"\clientCache\";
