@@ -1,0 +1,8 @@
+{
+    "serverSettings": {
+        "port": 80,
+        "adapter": "Ethernet",
+        "hostname": "http:/yourHostName.etc",
+        "atlasURL": "yourURl"
+    }
+}

@@ -35,19 +35,19 @@ app.use(session({
 
 var key = "1234";
 
-app.get("/", function (req, res) {
+app.get("/", function(req, res) {
     // res.render("home");
     res.sendStatus(200);
 });
 
-app.get('/api/games/general%key=:key&type=:type', function (req, res) {
+app.get('/api/games/general%key=:key&type=:type', function(req, res) {
     if (req.params.key == key) {
         //it doesnt matter the type, the response will be text
         res.sendFile(__dirname + '/serverFiles/library/gameList.txt');
     }
 });
 
-app.get('/api/games/about=:about%key=:key&type=:type', function (req, res) {
+app.get('/api/games/about=:about%key=:key&type=:type', function(req, res) {
     var games = [];
     fs.readdirSync(__dirname + '/serverFiles/games').forEach(file => {
         games.push(file);
@@ -70,7 +70,7 @@ app.get('/api/games/about=:about%key=:key&type=:type', function (req, res) {
     }
 });
 
-app.get('/api/login/user=:user&password=:password', function (req, res) {
+app.get('/api/login/user=:user&password=:password', function(req, res) {
     if (req.params.user == user) {
         if (req.params.password == pass) {
             res.send("1234");
@@ -78,7 +78,7 @@ app.get('/api/login/user=:user&password=:password', function (req, res) {
     } else res.sendStatus(403);
 });
 
-app.get('/api/signup/name=:name&password=:password', function (req, res) {
+app.get('/api/signup/name=:name&password=:password', function(req, res) {
     user = req.params.name;
     pass = req.params.password;
     res.send("1234");
@@ -99,7 +99,7 @@ console.time("Server started in ");
 console.log("Starting Server ...");
 
 
-var server = app.listen(port, function () {
+var server = app.listen(port, function() {
     console.log("");
     if (port != 80) {
         console.log('Server is now running. Go to localhost:' + port + ' on your browser');
@@ -118,16 +118,16 @@ var server = app.listen(port, function () {
             response += " ; ";
         }
     }
-    fs.writeFile("serverFiles/library/gameList.txt", response, function (err) {
+    fs.writeFile("serverFiles/library/gameList.txt", response, function(err) {
         if (err) throw err;
         console.log('Updated the games list');
     });
 
     var MongoClient = require('mongodb').MongoClient;
 
-    var password = "";
-    var uri = "mongodb+srv://gramanicu:" + password + "@maincluster-ujn0l.mongodb.net/test?retryWrites=true";
-    MongoClient.connect(uri, function (err, client) {
+    var password = "yourpassword";
+    var uri = "yourURL";
+    MongoClient.connect(uri, function(err, client) {
         if (err) {
             console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
         }
@@ -144,8 +144,10 @@ var server = app.listen(port, function () {
             gameList.push(obj);
         }
 
-        collection.insertMany(gameList, function (err, res) {
-            console.log("Number of documents inserted: " + res.insertedCount);
+        collection.insertMany(gameList, function(err, res) {
+            if (err == null) {
+                console.log("Number of documents inserted: " + res.insertedCount);
+            }
         });
         client.close();
     });
