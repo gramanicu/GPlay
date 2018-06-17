@@ -7,6 +7,14 @@ var randomstring = require('randomstring');
 var fs = require("fs");
 var path = require("path");
 var convert = require("xml-js");
+var MongoClient = require('mongodb').MongoClient;
+
+
+
+var collectionUsers;
+var collectionGames;
+var cloudPassword = "the access password";
+var uri = "mongodb+srv://gramanicu:" + cloudPassword +"@maincluster-ujn0l.mongodb.net/test?retryWrites=true";
 
 var port = 80;
 var app = express();
@@ -79,9 +87,22 @@ app.get('/api/login/user=:user&password=:password', function(req, res) {
 });
 
 app.get('/api/signup/name=:name&password=:password', function(req, res) {
-    user = req.params.name;
-    pass = req.params.password;
-    res.send("1234");
+
+    var key = "1234";
+    var newUser = {
+        "username": req.params.name,
+        "password": req.params.password,
+        "key": key,
+        "ownedGames": ""
+    }
+
+    collectionUsers.insertOne(newUser, function(err, res) {
+        if (err == null) {
+            console.log("added a new user");
+        }
+    });
+
+    res.send(key);
 });
 
 var user = "gramanicu";
@@ -123,20 +144,13 @@ var server = app.listen(port, function() {
         console.log('Updated the games list');
     });
 
-    var MongoClient = require('mongodb').MongoClient;
-
-    var password = "yourpassword";
-    var uri = "yourURL";
     MongoClient.connect(uri, function(err, client) {
         if (err) {
             console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
         }
-
         console.log('Connected to the database');
-
-
-        var collection = client.db("GPlay").collection("games");
-
+        collectionGames = client.db("GPlay").collection("games");
+        collectionUsers = client.db("GPlay").collection("users");
         var gameList = [];
         for (var i = 0; i < games.length; i++) {
             response = games[i].replace(".zip", '');
@@ -144,12 +158,11 @@ var server = app.listen(port, function() {
             gameList.push(obj);
         }
 
-        collection.insertMany(gameList, function(err, res) {
+        collectionGames.insertMany(gameList, function(err, res) {
             if (err == null) {
                 console.log("Number of documents inserted: " + res.insertedCount);
             }
         });
-        client.close();
     });
 
 });
