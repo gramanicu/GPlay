@@ -164,6 +164,11 @@ namespace GPlay_Client
             else return true;
         }
 
+        public bool specificFileIsDownloaded(string filename)
+        {
+            return filesToDownload.Contains(filename);
+        }
+
         /// <summary>
         /// Gets the home url
         /// </summary>

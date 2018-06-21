@@ -316,7 +316,7 @@ namespace GPlay_Client
                     gameListArray[i] = gameListArray[i].Trim();
                     string gameUrlForm = gameListArray[i].Replace(' ', '_');
                     string originUrlDesc = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=text";
-                    string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key=" + client.getKey() + @"&type=image";
+                    string originUrlLogo = client.domain + @"/api/games/about=" + gameUrlForm + @"%key="  + client.getKey() + @"&type=image";
                     string cache = client.clientCache + gameListArray[i] + @"\";
                     Directory.CreateDirectory(client.clientCache + gameListArray[i]);
                     client.downloadFile(originUrlDesc, cache + @"desc.json");
@@ -365,7 +365,6 @@ namespace GPlay_Client
                         string newName = cacheFiles[j].Replace(@"onlineCache\", "");
                         if (newName == name)
                         {
-
                             string oldText = File.ReadAllText(files[i] + @"\desc.json");
                             string newText = File.ReadAllText(cacheFiles[j] + @"\desc.json");
                             JToken oldDesc = JObject.Parse(oldText);
@@ -412,8 +411,7 @@ namespace GPlay_Client
                 {
                     updateCache();
                     timer.Dispose();
-                },
-                            null, 50, System.Threading.Timeout.Infinite);
+                },null, 50, System.Threading.Timeout.Infinite);
             }
         }
 
@@ -469,30 +467,55 @@ namespace GPlay_Client
 
                 for (int i = 0; i < directoryCount; i++)
                 {
-                    string text = File.ReadAllText(files[i] + @"\desc.json");
-                    JToken desc = JObject.Parse(text);
+                    string text = "";
 
-                    string name = (string)desc.SelectToken("name");
-                    string version = (string)desc.SelectToken("version");
-                    string description = (string)desc.SelectToken("description");
-                    string gameKey = (string)desc.SelectToken("gameKey");
-
-                    string imageLocation = files[i] + @"\logo.png";
-
-                    //get the user info from a file
-
-
-                    bool gameIsDownloaded = Directory.Exists(client.gameDirectory + @"\" + name);
-                    if(gameIsDownloaded)
+                    if (!client.specificFileIsDownloaded(Directory.GetCurrentDirectory() + @"\" +files[i] + @"\desc.json"))
                     {
-                        gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
+                        using (StreamReader reader = new StreamReader(files[i] + @"\desc.json"))
+                        {
+                            var line = reader.ReadLine();
+
+                            while (line != null)
+                            {
+                                text += line;
+                                line = reader.ReadLine();
+                            }
+                        }
+                        JToken desc = JObject.Parse(text);
+
+                        string name = (string)desc.SelectToken("name");
+                        string version = (string)desc.SelectToken("version");
+                        string description = (string)desc.SelectToken("description");
+                        string gameKey = (string)desc.SelectToken("gameKey");
+
+                        string imageLocation = files[i] + @"\logo.png";
+
+                        //get the user info from a file
+
+
+                        bool gameIsDownloaded = Directory.Exists(client.gameDirectory + @"\" + name);
+                        if (gameIsDownloaded)
+                        {
+                            gameList.addGameTab(imageLocation, name, "0 hours", version, "Play");
+                        }
+                        else
+                        {
+                            gameList.addGameTab(imageLocation, name, "0 hours", version, "Download");
+                        }
+
+                        gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
+
                     }
                     else
                     {
-                        gameList.addGameTab(imageLocation, name, "0 hours", version, "Download");
+                        //this waits for 50 ms until it tries again (if there are files still downloading)
+                        System.Threading.Timer timer = null;
+                        timer = new System.Threading.Timer((obj) =>
+                        {
+                            loadCache();
+                            timer.Dispose();
+                        }, null, 50, System.Threading.Timeout.Infinite);
                     }
-
-                    gameList.getButton(gameList.findTab(name)).Click += downloadButtonClick;
                 }
                 if (client.isOnline())
                 {
