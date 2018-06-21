@@ -3,6 +3,7 @@
         "port": 80,
         "adapter": "Ethernet",
         "hostname": "http:/yourHostName.etc",
-        "atlasURL": "yourURl"
+        "atlasURL": "mongodb+srv://GPlay_Server:F3AtIQ6FEnWhJR1c@maincluster-o4zxk.mongodb.net/test?retryWrites=true",
+        "keyLenght": 64
     }
 }

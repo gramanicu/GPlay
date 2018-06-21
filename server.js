@@ -13,12 +13,10 @@ var MongoClient = require('mongodb').MongoClient;
 
 var collectionUsers;
 var collectionGames;
-var cloudPassword = "the access password";
-var uri = "mongodb+srv://gramanicu:" + cloudPassword +"@maincluster-ujn0l.mongodb.net/test?retryWrites=true";
+var config = require(path.join(__dirname, '/serverFiles/settings/config.json'));
 
-var port = 80;
+var port = config.serverSettings.port;
 var app = express();
-
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'serverFiles/views'));
@@ -30,27 +28,13 @@ app.use(compression());
 app.use('/static', express.static(path.join(__dirname, 'serverFiles/public')));
 app.use('/games', express.static(__dirname + '/serverFiles/games'));
 app.use(cookieParser());
-/*
-app.use(session({
-    key: 'user_sid',
-    secret: 'api',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 600000
-    }
-}));*/
-
-var key = "1234";
 
 app.get("/", function(req, res) {
-    // res.render("home");
     res.sendStatus(200);
 });
 
 app.get('/api/games/general%key=:key&type=:type', function(req, res) {
-    if (req.params.key == key) {
-        //it doesnt matter the type, the response will be text
+    if (req.params.key != null) {
         res.sendFile(__dirname + '/serverFiles/library/gameList.txt');
     }
 });
@@ -62,33 +46,43 @@ app.get('/api/games/about=:about%key=:key&type=:type', function(req, res) {
     });
     var game = "";
 
-    if (req.params.key == key) {
-        for (var i = 0; i < games.length; i++) {
-            game = games[i].replace(".zip", '');
-            game = game.replace(/ /g, "_");
-            if (req.params.about == game) {
+    collectionUsers.findOne({ key: req.params.key}, function(err, response) {
+        if (err == null) {
+            for (var i = 0; i < games.length; i++) {
                 game = games[i].replace(".zip", '');
-                if (req.params.type == "text") {
-                    res.sendFile(__dirname + '/serverFiles/library/' + game + "/info.json");
-                } else if (req.params.type == "image") {
-                    res.sendFile(__dirname + '/serverFiles/library/' + game + "/logo.png");
+                game = game.replace(/ /g, "_");
+                if (req.params.about == game) {
+                    game = games[i].replace(".zip", '');
+                    if (req.params.type == "text") {
+                        res.sendFile(__dirname + '/serverFiles/library/' + game + "/info.json");
+                    } else if (req.params.type == "image") {
+                        res.sendFile(__dirname + '/serverFiles/library/' + game + "/logo.png");
+                    }
                 }
             }
         }
-    }
+    });
+});
+
+app.get('/api/buy/key=:key&gameid=:id', function(req,res){
+    collectionUsers.findOne({ key: req.params.key}, function(err, response) {
+        if (err == null) {
+            
+        }
+    });
 });
 
 app.get('/api/login/user=:user&password=:password', function(req, res) {
-    if (req.params.user == user) {
-        if (req.params.password == pass) {
-            res.send("1234");
-        } else res.sendStatus(403);
-    } else res.sendStatus(403);
+    collectionUsers.findOne({ username: req.params.user, password: req.params.password}, function(err, response) {
+        if (err == null && response !=null) {
+            res.send(response.key);
+        }
+        else res.sendStatus(403);
+    });
 });
 
 app.get('/api/signup/name=:name&password=:password', function(req, res) {
-
-    var key = "1234";
+    var key = randomstring.generate(config.serverSettings.keyLenght);
     var newUser = {
         "username": req.params.name,
         "password": req.params.password,
@@ -96,13 +90,13 @@ app.get('/api/signup/name=:name&password=:password', function(req, res) {
         "ownedGames": ""
     }
 
-    collectionUsers.insertOne(newUser, function(err, res) {
+    collectionUsers.insertOne(newUser, function(err, response) {
         if (err == null) {
             console.log("added a new user");
+            res.send(key);
         }
+        else res.sendStatus(403);
     });
-
-    res.send(key);
 });
 
 var user = "gramanicu";
@@ -144,7 +138,7 @@ var server = app.listen(port, function() {
         console.log('Updated the games list');
     });
 
-    MongoClient.connect(uri, function(err, client) {
+    MongoClient.connect(config.serverSettings.atlasURL, function(err, client) {
         if (err) {
             console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
         }
